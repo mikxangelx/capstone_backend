@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // True when admin sets a temporary password — user must change on first login
+    isPasswordTemp: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -36,15 +36,52 @@ const getUserById = async (req, res) => {
 };
 
 // POST /api/users  (admin creates a user)
+// For students: auto-generates a system email, also creates a parent account.
 const createUser = async (req, res) => {
   try {
-    const { name, email, password, role, section } = req.body;
+    const {
+      name, email, password, role, section,
+      parentName, parentEmail, parentPassword,
+    } = req.body;
 
-    const existing = await User.findOne({ email });
+    let userEmail = email;
+
+    // Students don't log in — auto-generate a system email from their name
+    if (role === 'student') {
+      userEmail = `${name.toLowerCase().replace(/\s+/g, '.')}.${Date.now()}@student.hhca.edu.ph`;
+    }
+
+    const existing = await User.findOne({ email: userEmail?.toLowerCase() });
     if (existing) return res.status(400).json({ message: 'Email already exists.' });
 
-    const user = await User.create({ name, email, password, role, section });
-    res.status(201).json(user);
+    const user = await User.create({
+      name,
+      email:          userEmail,
+      password:       password || 'student1234',
+      role,
+      section:        section || null,
+      isPasswordTemp: false,
+    });
+
+    // If adding a student, also create the linked parent account
+    let parent = null;
+    if (role === 'student' && parentName && parentEmail) {
+      const parentExists = await User.findOne({ email: parentEmail.toLowerCase() });
+      if (parentExists) {
+        return res.status(400).json({ message: 'Parent email already exists.' });
+      }
+
+      parent = await User.create({
+        name:           parentName,
+        email:          parentEmail,
+        password:       parentPassword || 'hhca1234',
+        role:           'parent',
+        childName:      name,
+        isPasswordTemp: true,
+      });
+    }
+
+    res.status(201).json({ user, parent });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
