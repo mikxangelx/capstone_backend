@@ -15,11 +15,12 @@ const getAnnouncements = async (req, res) => {
 // POST /api/announcements  (teacher/admin only)
 const createAnnouncement = async (req, res) => {
   try {
-    const { title, body, tag } = req.body;
+    const { title, body, tag, imageUrl } = req.body;
     const announcement = await Announcement.create({
       title,
       body,
       tag,
+      imageUrl: imageUrl || null,
       postedBy: req.user._id,
     });
     res.status(201).json(announcement);

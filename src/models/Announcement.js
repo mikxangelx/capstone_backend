@@ -16,6 +16,10 @@ const announcementSchema = new mongoose.Schema(
       enum: ['event', 'holiday', 'reminder', 'general'],
       default: 'general',
     },
+    imageUrl: {
+      type: String,
+      default: null,
+    },
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
